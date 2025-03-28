@@ -13,7 +13,7 @@ A comprehensive web-based calculator to help homeowners analyze whether refinanc
 
 ## Live Demo
 
-Visit the [live demo](https://yourusername.github.io/mortgage-refinance-calculator/) to try the tool.
+Visit the [live demo](https://mcg-online.github.io/mortgage-refinance-calculator/) to try the tool.
 
 ## Privacy
 
