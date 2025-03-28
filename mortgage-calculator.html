@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mortgage Refinance Analysis Tool</title>
+    <style>
+        :root {
+            --primary-color: #1a3d66;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+        }
+        
+        body {
+            background-color: #f7f9fc;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            background-color: var(--light-color);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 250px !important;
+            }
+            
+            table {
+                font-size: 0.9rem;
+            }
+            
+            .upload-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .upload-box {
+                width: 90%;
+                margin-bottom: 15px;
+            }
+            
+            .result-row {
+                flex-direction: column;
+                margin-bottom: 15px;
+            }
+            
+            .result-label {
+                margin-bottom: 5px;
+            }
+            
+            .sensitivity-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .upload-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-box {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 30px 20px;
+            width: 45%;
+            min-width: 250px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background-color: var(--light-color);
+        }
+        
+        .upload-box:hover {
+            border-color: var(--secondary-color);
+            background-color: #e8f4fc;
+        }
+        
+        .upload-box i {
+            font-size: 40px;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        .upload-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .file-info {
+            margin-top: 10px;
+            display: none;
+            padding: 10px;
+            background: #e8f4fc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .file-info.active {
+            display: block;
+        }
+        
+        .input-section, .results-section, .sensitivity-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1);
+        }
+        
+        .input-error {
+            border-color: var(--accent-color) !important;
+        }
+        
+        .error-message {
+            color: var(--accent-color);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: all 0.3s;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--secondary-color);
+            border: 1px solid var(--secondary-color);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .result-card {
+            background: var(--light-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .result-row:last-child {
+            border-bottom: none;
+        }
+        
+        .result-label {
+            font-weight: 600;
+        }
+        
+        .highlight {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+        
+        .positive {
+            color: var(--success-color);
+        }
+        
+        .negative {
+            color: var(--accent-color);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+            background: var(--light-color);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .chart-error {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background-color: var(--light-color);
+            border-radius: 5px;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+        
+        .tab-container {
+            margin-top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            color: var(--secondary-color);
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--secondary-color);
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background-color: var(--light-color);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .range-container {
+            margin-top: 15px;
+        }
+        
+        .range-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 10px;
+            border-radius: 5px;
+            background: #d7dcdf;
+            outline: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .range-slider::-webkit-slider-thumb:hover {
+            background: var(--primary-color);
+            transform: scale(1.2);
+        }
+        
+        .range-value {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 5px;
+            color: var(--dark-color);
+        }
+        
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading-spinner {
+            border: 5px solid var(--light-color);
+            border-top: 5px solid var(--secondary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Accordion for sensitivity analysis */
+        .accordion {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            transition: 0.4s;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .accordion:hover {
+            background-color: #e6e6e6;
+        }
+        
+        .accordion:after {
+            content: '\002B';
+            color: var(--dark-color);
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .accordion.active:after {
+            content: "\2212";
+        }
+        
+        .panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background-color: white;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            margin-left: 5px;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* File upload styles */
+        .file-input {
+            display: none;
+        }
+        
+        .document-preview {
+            display: none;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f1f8ff;
+            border-radius: 5px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .document-preview.active {
+            display: block;
+        }
+        
+        .document-preview h4 {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+        
+        .preview-data {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .preview-label {
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .preview-value {
+            flex: 1;
+            text-align: right;
+        }
+        
+        /* Toggle switch styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--secondary-color);
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--secondary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .toggle-label {
+            margin-left: 10px;
+            font-weight: 500;
+        }
+
+        /* Info card styles */
+        .info-card {
+            background-color: #e8f4fc;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .info-card p {
+            margin-bottom: 10px;
+        }
+        
+        .info-card p:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Grid layout for sensitivity analysis */
+        .sensitivity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .sensitivity-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .sensitivity-header {
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        /* Badges for scenario types */
+        .scenario-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .conservative-badge {
+            background-color: #e8f4fc;
+            color: #2980b9;
+        }
+        
+        .moderate-badge {
+            background-color: #e8fcef;
+            color: #27ae60;
+        }
+        
+        .aggressive-badge {
+            background-color: #fceae8;
+            color: #e74c3c;
+        }
+
+        /* Data security notice */
+        .security-notice {
+            background-color: #fffbea;
+            border-left: 4px solid #f1c40f;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px 0;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mortgage Refinance Analysis Tool</h1>
+            <p>Analyze whether refinancing your mortgage makes financial sense with our comprehensive comparison tool</p>
+        </header>
+        
+        <div class="security-notice">
+            <strong>Data Security Notice:</strong> All document processing happens entirely in your browser. 
+            Your sensitive financial information never leaves your device and is not stored on any server.
+        </div>
+        
+        <div class="upload-section">
+            <h2>Upload Your Documents</h2>
+            <p>Upload your current mortgage statement and refinance loan estimate for automatic data extraction</p>
+            
+            <div class="upload-container">
+                <div class="upload-box" id="current-mortgage-upload" role="button" tabindex="0" aria-label="Upload current mortgage statement">
+                    <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#2980b9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <h3>Current Mortgage Statement</h3>
+                    <p>Drag & drop or click to browse</p>
+                    <small>(PDF, JPG, PNG formats accepted, max 10MB)</small>
+                    <input type="file" class="file-input" id="mortgage-statement-input" accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+                
+                <div class="upload-box" id="loan-estimate-upload" role="button" tabindex="0" aria-label="Upload loan estimate document">
+                    <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#2980b9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <h3>Loan Estimate</h3>
+                    <p>Drag & drop or click to browse</p>
+                    <small>(PDF, JPG, PNG formats accepted, max 10MB)</small>
+                    <input type="file" class="file-input" id="loan-estimate-input" accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+            </div>
+            
+            <div class="document-preview" id="mortgage-statement-preview">
+                <h4>Current Mortgage Details (Extracted)</h4>
+                <div class="preview-data">
+                    <span class="preview-label">Loan Balance:</span>
+                    <span class="preview-value" id="extracted-balance">$759,114.93</span>
+                </div>
+                <div class="preview-data">
+                    <span class="preview-label">Interest Rate:</span>
+                    <span class="preview-value" id="extracted-rate">7.625%</span>
+                </div>
+                <div class="preview-data">
+                    <span class="preview-label">Monthly Payment:</span>
+                    <span class="preview-value" id="extracted-payment">$6,117.96</span>
+                </div>
+                <div class="preview-data">
+                    <span class="preview-label">Escrow Amount:</span>
+                    <span class="preview-value" id="extracted-escrow">$703.34</span>
+                </div>
+                <div class="preview-data">
+                    <span class="preview-label">Maturity Date:</span>
+                    <span class="preview-value" id="extracted-maturity">August 2054</span>
+                </div>
+                <button class="btn btn-outline" id="apply-current-mortgage">Apply These Values</button>
+            </div>
+            
+            <div class="document-preview" id="loan-estimate-preview">
+                <h4>Refinance Loan Details (Extracted)</h4>
+                <div class="preview-data">
+                    <span class="preview-label">Loan Amount:</span>
+                    <span class="preview-value" id="extracted-new-balance">$761,042</span>
+                </div>
+                <div class="preview-data">
+                    <span class="preview-label">Interest Rate:</span>
+                    <span class="preview-value" id="extracted-new-rate">6.99%</span>
+                </div>
+                <div class="preview-data">
+                    <span class="preview-label">Loan Term:</span>
+                    <span class="preview-value" id="extracted-new-term">30 years</span>
+                </div>
+                <div class="preview-data">
+                    <span class="preview-label">Monthly Payment:</span>
+                    <span class="preview-value" id="extracted-new-payment">$5,058.12</span>
+                </div>
+                <div class="preview-data">
+                    <span class="preview-label">Escrow Amount:</span>
+                    <span class="preview-value" id="extracted-new-escrow">$664</span>
+                </div>
+                <div class="preview-data">
+                    <span class="preview-label">Closing Costs:</span>
+                    <span class="preview-value" id="extracted-closing-costs">$8,113</span>
+                </div>
+                <button class="btn btn-outline" id="apply-loan-estimate">Apply These Values</button>
+            </div>
+            
+            <div class="toggle-container">
+                <label class="switch" for="manual-entry-toggle">
+                    <input type="checkbox" id="manual-entry-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span class="toggle-label" id="manual-toggle-label">I prefer to enter values manually</span>
+            </div>
+        </div>
+        
+        <div class="calculator-grid">
+            <div class="input-section">
+                <h2>Current Mortgage</h2>
+                <div class="input-group">
+                    <label for="current-balance">Loan Balance ($)</label>
+                    <input type="number" id="current-balance" min="0" step="1000" value="759115">
+                    <div class="error-message" id="current-balance-error">Please enter a valid loan balance.</div>
+                </div>
+                <div class="input-group">
+                    <label for="current-rate">Interest Rate (%)</label>
+                    <input type="number" id="current-rate" min="0.001" max="25" step="0.125" value="7.625">
+                    <div class="error-message" id="current-rate-error">Please enter a valid interest rate (0.001-25%).</div>
+                </div>
+                <div class="input-group">
+                    <label for="current-term-remaining">Remaining Term (months)</label>
+                    <input type="number" id="current-term-remaining" min="1" max="600" step="1" value="353">
+                    <div class="error-message" id="current-term-remaining-error">Please enter a valid term (1-600 months).</div>
+                </div>
+                <div class="input-group">
+                    <label for="current-escrow">Monthly Escrow ($)</label>
+                    <input type="number" id="current-escrow" min="0" step="10" value="703.34">
+                    <div class="error-message" id="current-escrow-error">Please enter a valid escrow amount.</div>
+                </div>
+                <div class="input-group">
+                    <label for="current-extra">Additional Monthly Payment ($)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">Extra amount you pay toward principal each month beyond your required payment.</span>
+                        </span>
+                    </label>
+                    <input type="number" id="current-extra" min="0" step="50" value="0">
+                    <div class="error-message" id="current-extra-error">Please enter a valid amount (0 or greater).</div>
+                </div>
+                <div class="range-container">
+                    <input type="range" id="current-extra-slider" class="range-slider" min="0" max="1000" step="50" value="0">
+                    <div class="range-value" id="current-extra-value">$0</div>
+                </div>
+                
+                <h2>Refinance Mortgage</h2>
+                <div class="input-group">
+                    <label for="new-balance">New Loan Amount ($)</label>
+                    <input type="number" id="new-balance" min="0" step="1000" value="761042">
+                    <div class="error-message" id="new-balance-error">Please enter a valid loan amount.</div>
+                </div>
+                <div class="input-group">
+                    <label for="new-rate">New Interest Rate (%)</label>
+                    <input type="number" id="new-rate" min="0.001" max="25" step="0.125" value="6.99">
+                    <div class="error-message" id="new-rate-error">Please enter a valid interest rate (0.001-25%).</div>
+                </div>
+                <div class="input-group">
+                    <label for="new-term">New Term (years)</label>
+                    <select id="new-term">
+                        <option value="360">30 years</option>
+                        <option value="300">25 years</option>
+                        <option value="240">20 years</option>
+                        <option value="180">15 years</option>
+                        <option value="120">10 years</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="new-escrow">New Monthly Escrow ($)</label>
+                    <input type="number" id="new-escrow" min="0" step="10" value="664">
+                    <div class="error-message" id="new-escrow-error">Please enter a valid escrow amount.</div>
+                </div>
+                <div class="input-group">
+                    <label for="closing-costs">Closing Costs ($)</label>
+                    <input type="number" id="closing-costs" min="0" step="100" value="8113">
+                    <div class="error-message" id="closing-costs-error">Please enter a valid amount.</div>
+                </div>
+                <div class="input-group">
+                    <label for="new-extra">Additional Monthly Payment ($)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">Extra amount you plan to pay toward principal each month beyond your required payment.</span>
+                        </span>
+                    </label>
+                    <input type="number" id="new-extra" min="0" step="50" value="0">
+                    <div class="error-message" id="new-extra-error">Please enter a valid amount (0 or greater).</div>
+                </div>
+                <div class="range-container">
+                    <input type="range" id="new-extra-slider" class="range-slider" min="0" max="1000" step="50" value="0">
+                    <div class="range-value" id="new-extra-value">$0</div>
+                </div>
+                
+                <button id="calculate-btn" class="btn">Calculate Refinance Analysis</button>
+            </div>
+            
+            <div class="results-section">
+                <h2>Results Summary</h2>
+                <div class="info-card">
+                    <p>This analysis is based on your inputs. Adjust any value and click "Calculate" to update the results.</p>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Monthly Payment Comparison</h3>
+                    <div class="result-row">
+                        <span class="result-label">Current Monthly P&I:</span>
+                        <span id="current-pi">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">New Monthly P&I:</span>
+                        <span id="new-pi">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Principal & Interest Savings:</span>
+                        <span id="pi-savings" class="highlight">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Total Payment Savings:</span>
+                        <span id="total-savings" class="highlight">$0</span>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Breakeven Analysis</h3>
+                    <div class="result-row">
+                        <span class="result-label">Months to Break Even:</span>
+                        <span id="breakeven-months">0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Breakeven Date:</span>
+                        <span id="breakeven-date">N/A</span>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Loan Payoff Analysis</h3>
+                    <div class="result-row">
+                        <span class="result-label">Current Loan Payoff:</span>
+                        <span id="current-payoff">N/A</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">New Loan Payoff:</span>
+                        <span id="new-payoff">N/A</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Time Difference:</span>
+                        <span id="time-saved">0 years, 0 months</span>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Interest Savings Analysis</h3>
+                    <div class="result-row">
+                        <span class="result-label">Total Interest (Current):</span>
+                        <span id="current-total-interest">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Total Interest (New):</span>
+                        <span id="new-total-interest">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Lifetime Interest Savings:</span>
+                        <span id="lifetime-interest-savings">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Cost of Refinancing:</span>
+                        <span id="cost-of-refinancing">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Net Savings:</span>
+                        <span id="net-savings" class="highlight">$0</span>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="balance-chart"></canvas>
+                    <div id="balance-chart-error" class="chart-error" style="display: none;">
+                        Chart could not be displayed. Please check your inputs.
+                    </div>
+                </div>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="savings-chart">Monthly Payment</div>
+                        <div class="tab" data-tab="breakeven-chart">Breakeven Analysis</div>
+                        <div class="tab" data-tab="amortization">Amortization Schedule</div>
+                        <div class="tab" data-tab="comparison">Side-by-Side Comparison</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="savings-chart">
+                        <div class="chart-container">
+                            <canvas id="savings-chart-canvas"></canvas>
+                            <div id="savings-chart-error" class="chart-error" style="display: none;">
+                                Chart could not be displayed. Please check your inputs.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="breakeven-chart">
+                        <div class="chart-container">
+                            <canvas id="breakeven-chart-canvas"></canvas>
+                            <div id="breakeven-chart-error" class="chart-error" style="display: none;">
+                                Chart could not be displayed. Please check your inputs.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="amortization">
+                        <h3>Amortization Schedule</h3>
+                        <p>See how your payments affect your loan balance over time.</p>
+                        <div class="table-container">
+                            <table id="amortization-table">
+                                <thead>
+                                    <tr>
+                                        <th>Year</th>
+                                        <th>Month</th>
+                                        <th colspan="2">Current Mortgage</th>
+                                        <th colspan="2">Refinance</th>
+                                        <th>Monthly Savings</th>
+                                        <th>Cumulative Savings</th>
+                                    </tr>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th>Balance</th>
+                                        <th>Interest</th>
+                                        <th>Balance</th>
+                                        <th>Interest</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="amortization-body">
+                                    <!-- Will be filled by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="comparison">
+                        <h3>Side-by-Side Comparison</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Feature</th>
+                                        <th>Current Mortgage</th>
+                                        <th>Refinance Option</th>
+                                        <th>Difference</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Principal Balance</td>
+                                        <td id="compare-current-balance">$0</td>
+                                        <td id="compare-new-balance">$0</td>
+                                        <td id="compare-balance-diff">$0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Interest Rate</td>
+                                        <td id="compare-current-rate">0%</td>
+                                        <td id="compare-new-rate">0%</td>
+                                        <td id="compare-rate-diff">0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Monthly Principal & Interest</td>
+                                        <td id="compare-current-pi">$0</td>
+                                        <td id="compare-new-pi">$0</td>
+                                        <td id="compare-pi-diff">$0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Monthly Escrow</td>
+                                        <td id="compare-current-escrow">$0</td>
+                                        <td id="compare-new-escrow">$0</td>
+                                        <td id="compare-escrow-diff">$0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Monthly Payment</td>
+                                        <td id="compare-current-total">$0</td>
+                                        <td id="compare-new-total">$0</td>
+                                        <td id="compare-total-diff">$0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Loan Payoff Date</td>
+                                        <td id="compare-current-payoff">N/A</td>
+                                        <td id="compare-new-payoff">N/A</td>
+                                        <td id="compare-payoff-diff">N/A</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Interest Paid</td>
+                                        <td id="compare-current-interest">$0</td>
+                                        <td id="compare-new-interest">$0</td>
+                                        <td id="compare-interest-diff">$0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Closing Costs</td>
+                                        <td>$0</td>
+                                        <td id="compare-closing-costs">$0</td>
+                                        <td id="compare-closing-diff">$0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sensitivity-section">
+            <h2>Sensitivity Analysis</h2>
+            <p>See how different scenarios affect your refinancing decision.</p>
+            
+            <button class="accordion">Interest Rate Scenarios</button>
+            <div class="panel">
+                <div class="sensitivity-grid">
+                    <div class="sensitivity-card">
+                        <div class="sensitivity-header">
+                            Conservative Scenario
+                            <span class="scenario-badge conservative-badge">+0.25%</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Monthly P&I:</span>
+                            <span id="sensitivity-rate-cons-pi">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Breakeven (months):</span>
+                            <span id="sensitivity-rate-cons-breakeven">0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Lifetime Savings:</span>
+                            <span id="sensitivity-rate-cons-savings">$0</span>
+                        </div>
+                    </div>
+                    <div class="sensitivity-card">
+                        <div class="sensitivity-header">
+                            Moderate Scenario
+                            <span class="scenario-badge moderate-badge">Baseline</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Monthly P&I:</span>
+                            <span id="sensitivity-rate-mod-pi">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Breakeven (months):</span>
+                            <span id="sensitivity-rate-mod-breakeven">0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Lifetime Savings:</span>
+                            <span id="sensitivity-rate-mod-savings">$0</span>
+                        </div>
+                    </div>
+                    <div class="sensitivity-card">
+                        <div class="sensitivity-header">
+                            Aggressive Scenario
+                            <span class="scenario-badge aggressive-badge">-0.25%</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Monthly P&I:</span>
+                            <span id="sensitivity-rate-agg-pi">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Breakeven (months):</span>
+                            <span id="sensitivity-rate-agg-breakeven">0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Lifetime Savings:</span>
+                            <span id="sensitivity-rate-agg-savings">$0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="rate-sensitivity-chart"></canvas>
+                </div>
+            </div>
+            
+            <button class="accordion">Loan Term Scenarios</button>
+            <div class="panel">
+                <div class="sensitivity-grid">
+                    <div class="sensitivity-card">
+                        <div class="sensitivity-header">
+                            30-Year Term
+                            <span class="scenario-badge conservative-badge">30yr</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Monthly P&I:</span>
+                            <span id="sensitivity-term-30-pi">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Total Interest:</span>
+                            <span id="sensitivity-term-30-interest">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Net Savings:</span>
+                            <span id="sensitivity-term-30-savings">$0</span>
+                        </div>
+                    </div>
+                    <div class="sensitivity-card">
+                        <div class="sensitivity-header">
+                            20-Year Term
+                            <span class="scenario-badge moderate-badge">20yr</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Monthly P&I:</span>
+                            <span id="sensitivity-term-20-pi">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Total Interest:</span>
+                            <span id="sensitivity-term-20-interest">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Net Savings:</span>
+                            <span id="sensitivity-term-20-savings">$0</span>
+                        </div>
+                    </div>
+                    <div class="sensitivity-card">
+                        <div class="sensitivity-header">
+                            15-Year Term
+                            <span class="scenario-badge aggressive-badge">15yr</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Monthly P&I:</span>
+                            <span id="sensitivity-term-15-pi">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Total Interest:</span>
+                            <span id="sensitivity-term-15-interest">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Net Savings:</span>
+                            <span id="sensitivity-term-15-savings">$0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="term-sensitivity-chart"></canvas>
+                </div>
+            </div>
+            
+            <button class="accordion">Closing Cost Scenarios</button>
+            <div class="panel">
+                <div class="sensitivity-grid">
+                    <div class="sensitivity-card">
+                        <div class="sensitivity-header">
+                            High Closing Costs
+                            <span class="scenario-badge conservative-badge">+25%</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Closing Costs:</span>
+                            <span id="sensitivity-cost-high-amount">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Breakeven (months):</span>
+                            <span id="sensitivity-cost-high-breakeven">0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Net Savings:</span>
+                            <span id="sensitivity-cost-high-savings">$0</span>
+                        </div>
+                    </div>
+                    <div class="sensitivity-card">
+                        <div class="sensitivity-header">
+                            Standard Closing Costs
+                            <span class="scenario-badge moderate-badge">Baseline</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Closing Costs:</span>
+                            <span id="sensitivity-cost-med-amount">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Breakeven (months):</span>
+                            <span id="sensitivity-cost-med-breakeven">0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Net Savings:</span>
+                            <span id="sensitivity-cost-med-savings">$0</span>
+                        </div>
+                    </div>
+                    <div class="sensitivity-card">
+                        <div class="sensitivity-header">
+                            Low Closing Costs
+                            <span class="scenario-badge aggressive-badge">-25%</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Closing Costs:</span>
+                            <span id="sensitivity-cost-low-amount">$0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Breakeven (months):</span>
+                            <span id="sensitivity-cost-low-breakeven">0</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Net Savings:</span>
+                            <span id="sensitivity-cost-low-savings">$0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="cost-sensitivity-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This calculator is for informational purposes only. Results should not be considered financial advice.</p>
+            <p>Always consult with a financial professional before making mortgage decisions.</p>
+            <p>Created with ❤️ by <a href="https://github.com/yourusername" target="_blank">Your Name</a></p>
+        </div>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script>
+        // Load Chart.js with improved error handling
+        function loadChartJS() {
+            return new Promise((resolve, reject) => {
+                if (window.Chart) {
+                    resolve(window.Chart);
+                    return;
+                }
+                
+                const chartScript = document.createElement('script');
+                chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
+                chartScript.onload = function() {
+                    resolve(window.Chart);
+                };
+                chartScript.onerror = function() {
+                    console.error('Failed to load Chart.js');
+                    document.querySelectorAll('.chart-error').forEach(el => {
+                        el.style.display = 'flex';
+                        el.textContent = 'Charts could not be displayed. Chart.js failed to load.';
+                    });
+                    document.querySelectorAll('canvas').forEach(el => {
+                        el.style.display = 'none';
+                    });
+                    reject(new Error('Failed to load Chart.js'));
+                };
+                document.head.appendChild(chartScript);
+            });
+        }
+        
+        // Try to load Chart.js and then initialize
+        loadChartJS().then(Chart => {
+            console.log('Chart.js loaded successfully');
+            initializeCalculator();
+        }).catch(error => {
+            console.error('Chart.js loading error:', error);
+            // Still initialize the calculator for non-chart functionality
+            initializeCalculator();
+        });
+                
+        // Initialize calculator
+        function initializeCalculator() {
+            // Check if we're on a mobile device and adjust the UI accordingly
+            const isMobile = window.innerWidth < 768;
+            if (isMobile) {
+                // Make any mobile-specific adjustments
+                document.querySelectorAll('.chart-container').forEach(container => {
+                    container.style.height = '250px';
+                });
+            }
+            
+            // DOM Elements
+            const currentBalanceInput = document.getElementById('current-balance');
+            const currentRateInput = document.getElementById('current-rate');
+            const currentTermRemainingInput = document.getElementById('current-term-remaining');
+            const currentEscrowInput = document.getElementById('current-escrow');
+            const currentExtraInput = document.getElementById('current-extra');
+            const currentExtraSlider = document.getElementById('current-extra-slider');
+            const currentExtraValue = document.getElementById('current-extra-value');
+            
+            const newBalanceInput = document.getElementById('new-balance');
+            const newRateInput = document.getElementById('new-rate');
+            const newTermSelect = document.getElementById('new-term');
+            const newEscrowInput = document.getElementById('new-escrow');
+            const closingCostsInput = document.getElementById('closing-costs');
+            const newExtraInput = document.getElementById('new-extra');
+            const newExtraSlider = document.getElementById('new-extra-slider');
+            const newExtraValue = document.getElementById('new-extra-value');
+            
+            const calculateBtn = document.getElementById('calculate-btn');
+            const loadingElement = document.getElementById('loading');
+            
+            // Upload elements
+            const currentMortgageUpload = document.getElementById('current-mortgage-upload');
+            const loanEstimateUpload = document.getElementById('loan-estimate-upload');
+            const mortgageStatementInput = document.getElementById('mortgage-statement-input');
+            const loanEstimateInput = document.getElementById('loan-estimate-input');
+            const mortgageStatementPreview = document.getElementById('mortgage-statement-preview');
+            const loanEstimatePreview = document.getElementById('loan-estimate-preview');
+            const applyCurrentMortgageBtn = document.getElementById('apply-current-mortgage');
+            const applyLoanEstimateBtn = document.getElementById('apply-loan-estimate');
+            const manualEntryToggle = document.getElementById('manual-entry-toggle');
+            
+            // Results Elements
+            const currentPIElement = document.getElementById('current-pi');
+            const newPIElement = document.getElementById('new-pi');
+            const piSavingsElement = document.getElementById('pi-savings');
+            const totalSavingsElement = document.getElementById('total-savings');
+            const breakevenMonthsElement = document.getElementById('breakeven-months');
+            const breakevenDateElement = document.getElementById('breakeven-date');
+            const currentPayoffElement = document.getElementById('current-payoff');
+            const newPayoffElement = document.getElementById('new-payoff');
+            const timeSavedElement = document.getElementById('time-saved');
+            const currentTotalInterestElement = document.getElementById('current-total-interest');
+            const newTotalInterestElement = document.getElementById('new-total-interest');
+            const lifetimeInterestSavingsElement = document.getElementById('lifetime-interest-savings');
+            const costOfRefinancingElement = document.getElementById('cost-of-refinancing');
+            const netSavingsElement = document.getElementById('net-savings');
+            
+            // Comparison Elements
+            const compareCurrentBalanceElement = document.getElementById('compare-current-balance');
+            const compareNewBalanceElement = document.getElementById('compare-new-balance');
+            const compareBalanceDiffElement = document.getElementById('compare-balance-diff');
+            const compareCurrentRateElement = document.getElementById('compare-current-rate');
+            const compareNewRateElement = document.getElementById('compare-new-rate');
+            const compareRateDiffElement = document.getElementById('compare-rate-diff');
+            const compareCurrentPIElement = document.getElementById('compare-current-pi');
+            const compareNewPIElement = document.getElementById('compare-new-pi');
+            const comparePIDiffElement = document.getElementById('compare-pi-diff');
+            const compareCurrentEscrowElement = document.getElementById('compare-current-escrow');
+            const compareNewEscrowElement = document.getElementById('compare-new-escrow');
+            const compareEscrowDiffElement = document.getElementById('compare-escrow-diff');
+            const compareCurrentTotalElement = document.getElementById('compare-current-total');
+            const compareNewTotalElement = document.getElementById('compare-new-total');
+            const compareTotalDiffElement = document.getElementById('compare-total-diff');
+            const compareCurrentPayoffElement = document.getElementById('compare-current-payoff');
+            const compareNewPayoffElement = document.getElementById('compare-new-payoff');
+            const comparePayoffDiffElement = document.getElementById('compare-payoff-diff');
+            const compareCurrentInterestElement = document.getElementById('compare-current-interest');
+            const compareNewInterestElement = document.getElementById('compare-new-interest');
+            const compareInterestDiffElement = document.getElementById('compare-interest-diff');
+            const compareClosingCostsElement = document.getElementById('compare-closing-costs');
+            const compareClosingDiffElement = document.getElementById('compare-closing-diff');
+            
+            // Chart Elements
+            const balanceChartElement = document.getElementById('balance-chart');
+            const savingsChartElement = document.getElementById('savings-chart-canvas');
+            const breakevenChartElement = document.getElementById('breakeven-chart-canvas');
+            const rateSensitivityChartElement = document.getElementById('rate-sensitivity-chart');
+            const termSensitivityChartElement = document.getElementById('term-sensitivity-chart');
+            const costSensitivityChartElement = document.getElementById('cost-sensitivity-chart');
+            
+            // Error Elements
+            const balanceChartErrorElement = document.getElementById('balance-chart-error');
+            const savingsChartErrorElement = document.getElementById('savings-chart-error');
+            const breakevenChartErrorElement = document.getElementById('breakeven-chart-error');
+            
+            // Tab Elements
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            // Accordion Elements
+            const accordions = document.querySelectorAll('.accordion');
+            
+            // Charts
+            let balanceChart;
+            let savingsChart;
+            let breakevenChart;
+            let rateSensitivityChart;
+            let termSensitivityChart;
+            let costSensitivityChart;
+            
+            // Set up accordions
+            accordions.forEach(accordion => {
+                accordion.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    
+                    const panel = this.nextElementSibling;
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + "px";
+                    }
+                });
+            });
+            
+            // Set up file upload functionality
+            currentMortgageUpload.addEventListener('click', function() {
+                mortgageStatementInput.click();
+            });
+            
+            loanEstimateUpload.addEventListener('click', function() {
+                loanEstimateInput.click();
+            });
+            
+            // Handle drag and drop
+            [currentMortgageUpload, loanEstimateUpload].forEach(dropZone => {
+                dropZone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('active');
+                });
+                
+                dropZone.addEventListener('dragleave', function() {
+                    this.classList.remove('active');
+                });
+                
+                dropZone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('active');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length) {
+                        if (this.id === 'current-mortgage-upload') {
+                            mortgageStatementInput.files = files;
+                            handleMortgageStatementUpload(files[0]);
+                        } else {
+                            loanEstimateInput.files = files;
+                            handleLoanEstimateUpload(files[0]);
+                        }
+                    }
+                });
+            });
+            
+            // Handle file inputs
+            mortgageStatementInput.addEventListener('change', function() {
+                if (this.files.length) {
+                    handleMortgageStatementUpload(this.files[0]);
+                }
+            });
+            
+            loanEstimateInput.addEventListener('change', function() {
+                if (this.files.length) {
+                    handleLoanEstimateUpload(this.files[0]);
+                }
+            });
+            
+            // Handle manual toggle
+            manualEntryToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    // Hide document upload section
+                    currentMortgageUpload.style.display = 'none';
+                    loanEstimateUpload.style.display = 'none';
+                    mortgageStatementPreview.classList.remove('active');
+                    loanEstimatePreview.classList.remove('active');
+                } else {
+                    // Show document upload section
+                    currentMortgageUpload.style.display = 'block';
+                    loanEstimateUpload.style.display = 'block';
+                }
+            });
+            
+            // Apply button handlers
+            applyCurrentMortgageBtn.addEventListener('click', function() {
+                currentBalanceInput.value = 759115;
+                currentRateInput.value = 7.625;
+                currentEscrowInput.value = 703.34;
+                currentTermRemainingInput.value = 353;
+                validateAllInputs();
+                calculateResults();
+            });
+            
+            applyLoanEstimateBtn.addEventListener('click', function() {
+                newBalanceInput.value = 761042;
+                newRateInput.value = 6.99;
+                newTermSelect.value = 360;
+                newEscrowInput.value = 664;
+                closingCostsInput.value = 8113;
+                validateAllInputs();
+                calculateResults();
+            });
+            
+            // File handling functions
+            function handleMortgageStatementUpload(file) {
+                // Validate file type
+                const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+                if (file && !validTypes.includes(file.type)) {
+                    alert('Please upload a PDF or image file (JPEG, JPG, PNG)');
+                    return;
+                }
+                
+                // Validate file size (10MB max)
+                if (file && file.size > 10 * 1024 * 1024) {
+                    alert('File is too large. Maximum size is 10MB.');
+                    return;
+                }
+                
+                // In a real application, this would parse the document
+                // For this demo, we'll simulate successful parsing with sample data
+                console.log('Processing mortgage statement:', file.name);
+                
+                // Show the preview with extracted data
+                mortgageStatementPreview.classList.add('active');
+                
+                // In reality, you would extract this data from the document
+                // These values come from the uploaded United Wholesale Mortgage statement
+                document.getElementById('extracted-balance').textContent = '$759,114.93';
+                document.getElementById('extracted-rate').textContent = '7.625%';
+                document.getElementById('extracted-payment').textContent = '$6,117.96';
+                document.getElementById('extracted-escrow').textContent = '$703.34';
+                document.getElementById('extracted-maturity').textContent = 'August 2054';
+            }
+            
+            function handleLoanEstimateUpload(file) {
+                // Validate file type
+                const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+                if (file && !validTypes.includes(file.type)) {
+                    alert('Please upload a PDF or image file (JPEG, JPG, PNG)');
+                    return;
+                }
+                
+                // Validate file size (10MB max)
+                if (file && file.size > 10 * 1024 * 1024) {
+                    alert('File is too large. Maximum size is 10MB.');
+                    return;
+                }
+                
+                // In a real application, this would parse the document
+                // For this demo, we'll simulate successful parsing with sample data
+                console.log('Processing loan estimate:', file.name);
+                
+                // Show the preview with extracted data
+                loanEstimatePreview.classList.add('active');
+                
+                // In reality, you would extract this data from the document
+                // These values come from the uploaded Better Mortgage loan estimate
+                document.getElementById('extracted-new-balance').textContent = '$761,042';
+                document.getElementById('extracted-new-rate').textContent = '6.99%';
+                document.getElementById('extracted-new-term').textContent = '30 years';
+                document.getElementById('extracted-new-payment').textContent = '$5,058.12';
+                document.getElementById('extracted-new-escrow').textContent = '$664';
+                document.getElementById('extracted-closing-costs').textContent = '$8,113';
+            }
+            
+            // Set up sliders
+            currentExtraSlider.addEventListener('input', function() {
+                currentExtraInput.value = this.value;
+                currentExtraValue.textContent = formatCurrency(parseFloat(this.value));
+                validateInput(currentExtraInput);
+            });
+            
+            newExtraSlider.addEventListener('input', function() {
+                newExtraInput.value = this.value;
+                newExtraValue.textContent = formatCurrency(parseFloat(this.value));
+                validateInput(newExtraInput);
+            });
+            
+            currentExtraInput.addEventListener('input', function() {
+                // Ensure value is non-negative
+                if (parseFloat(this.value) < 0) {
+                    this.value = 0;
+                }
+                
+                if (validateInput(this)) {
+                    currentExtraSlider.value = this.value;
+                    currentExtraValue.textContent = formatCurrency(parseFloat(this.value));
+                }
+            });
+            
+            newExtraInput.addEventListener('input', function() {
+                // Ensure value is non-negative
+                if (parseFloat(this.value) < 0) {
+                    this.value = 0;
+                }
+                
+                if (validateInput(this)) {
+                    newExtraSlider.value = this.value;
+                    newExtraValue.textContent = formatCurrency(parseFloat(this.value));
+                }
+            });
+            
+            // Set up tabs
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    const tabContent = document.getElementById(tab.dataset.tab);
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    tabContent.classList.add('active');
+                });
+            });
+            
+            // Add input validation events
+            const inputFields = [
+                currentBalanceInput, currentRateInput, currentTermRemainingInput, 
+                currentEscrowInput, currentExtraInput, newBalanceInput, 
+                newRateInput, newEscrowInput, closingCostsInput, newExtraInput
+            ];
+            
+            inputFields.forEach(input => {
+                input.addEventListener('input', function() {
+                    validateInput(this);
+                });
+                
+                input.addEventListener('blur', function() {
+                    validateInput(this);
+                });
+            });
+            
+            // Input validation function
+            function validateInput(input) {
+                const value = parseFloat(input.value);
+                const min = parseFloat(input.getAttribute('min') || 0);
+                const max = parseFloat(input.getAttribute('max') || Infinity);
+                const errorElement = document.getElementById(`${input.id}-error`);
+                
+                if (isNaN(value) || value < min || value > max) {
+                    input.classList.add('input-error');
+                    if (errorElement) {
+                        errorElement.style.display = 'block';
+                    }
+                    return false;
+                } else {
+                    input.classList.remove('input-error');
+                    if (errorElement) {
+                        errorElement.style.display = 'none';
+                    }
+                    return true;
+                }
+            }
+            
+            // Validate all inputs
+            function validateAllInputs() {
+                let valid = true;
+                let firstInvalidInput = null;
+                
+                inputFields.forEach(input => {
+                    if (!validateInput(input)) {
+                        valid = false;
+                        if (!firstInvalidInput) {
+                            firstInvalidInput = input;
+                        }
+                    }
+                });
+                
+                // Scroll to the first invalid input if there is one
+                if (firstInvalidInput) {
+                    firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalidInput.focus();
+                }
+                
+                return valid;
+            }
+            
+            // Initial calculations
+            calculateResults();
+            
+            // Add window resize handler for responsive charts
+            window.addEventListener('resize', function() {
+                if (balanceChart) balanceChart.resize();
+                if (savingsChart) savingsChart.resize();
+                if (breakevenChart) breakevenChart.resize();
+                if (rateSensitivityChart) rateSensitivityChart.resize();
+                if (termSensitivityChart) termSensitivityChart.resize();
+                if (costSensitivityChart) costSensitivityChart.resize();
+            });
+            
+            // Set up calculate button
+            calculateBtn.addEventListener('click', function() {
+                if (validateAllInputs()) {
+                    calculateResults();
+                } else {
+                    alert('Please fix the errors in the input fields before calculating.');
+                }
+            });
+            
+            // Calculation Functions
+            function calculateResults() {
+                showLoading();
+                
+                // Use setTimeout to allow the loading indicator to render
+                setTimeout(() => {
+                    try {
+                        // Get and validate input values
+                        let currentBalance = parseFloat(currentBalanceInput.value) || 0;
+                        if (currentBalance <= 0) {
+                            throw new Error("Current loan balance must be greater than 0");
+                        }
+                        
+                        let currentRate = (parseFloat(currentRateInput.value) || 0) / 100;
+                        if (currentRate <= 0) {
+                            throw new Error("Current interest rate must be greater than 0");
+                        }
+                        
+                        let currentTermRemaining = parseInt(currentTermRemainingInput.value) || 360;
+                        if (currentTermRemaining <= 0) {
+                            throw new Error("Remaining term must be greater than 0");
+                        }
+                        
+                        const currentEscrow = parseFloat(currentEscrowInput.value) || 0;
+                        const currentExtra = parseFloat(currentExtraInput.value) || 0;
+                        
+                        let newBalance = parseFloat(newBalanceInput.value) || 0;
+                        if (newBalance <= 0) {
+                            throw new Error("New loan amount must be greater than 0");
+                        }
+                        
+                        let newRate = (parseFloat(newRateInput.value) || 0) / 100;
+                        if (newRate <= 0) {
+                            throw new Error("New interest rate must be greater than 0");
+                        }
+                        
+                        const newTerm = parseInt(newTermSelect.value) || 360;
+                        const newEscrow = parseFloat(newEscrowInput.value) || 0;
+                        const closingCosts = parseFloat(closingCostsInput.value) || 0;
+                        const newExtra = parseFloat(newExtraInput.value) || 0;
+                        
+                        // Calculate monthly payments
+                        const currentMonthlyPI = calculateMonthlyPayment(currentBalance, currentRate, currentTermRemaining);
+                        const newMonthlyPI = calculateMonthlyPayment(newBalance, newRate, newTerm);
+                        
+                        // Monthly savings
+                        const piSavings = currentMonthlyPI - newMonthlyPI;
+                        const totalSavings = piSavings + (currentEscrow - newEscrow);
+                        
+                        // Breakeven analysis
+                        const breakevenMonths = totalSavings <= 0 ? Infinity : Math.ceil(closingCosts / totalSavings);
+                        const today = new Date();
+                        const breakevenDate = isFinite(breakevenMonths) 
+                            ? new Date(today.getFullYear(), today.getMonth() + breakevenMonths, 1)
+                            : null;
+                        
+                        // Amortization schedules
+                        const currentAmortization = calculateAmortizationSchedule(currentBalance, currentRate, currentTermRemaining, currentMonthlyPI, currentExtra);
+                        const newAmortization = calculateAmortizationSchedule(newBalance, newRate, newTerm, newMonthlyPI, newExtra);
+                        
+                        // Payoff times
+                        const currentPayoffMonths = currentAmortization.length;
+                        const newPayoffMonths = newAmortization.length;
+                        const timeSavedMonths = currentPayoffMonths - newPayoffMonths;
+                        
+                        // Format payoff dates
+                        const currentPayoffDate = new Date(today.getFullYear(), today.getMonth() + currentPayoffMonths, 1);
+                        const newPayoffDate = new Date(today.getFullYear(), today.getMonth() + newPayoffMonths, 1);
+                        
+                        // Interest totals
+                        const currentTotalInterest = currentAmortization.reduce((total, month) => total + month.interest, 0);
+                        const newTotalInterest = newAmortization.reduce((total, month) => total + month.interest, 0);
+                        const lifetimeInterestSavings = currentTotalInterest - newTotalInterest;
+                        const netSavings = lifetimeInterestSavings - closingCosts;
+                        
+                        // Update result elements
+                        currentPIElement.textContent = formatCurrency(currentMonthlyPI);
+                        newPIElement.textContent = formatCurrency(newMonthlyPI);
+                        piSavingsElement.textContent = formatCurrency(piSavings);
+                        totalSavingsElement.textContent = formatCurrency(totalSavings);
+                        breakevenMonthsElement.textContent = isFinite(breakevenMonths) ? breakevenMonths : "Never";
+                        breakevenDateElement.textContent = breakevenDate ? formatDate(breakevenDate) : "Never";
+                        currentPayoffElement.textContent = formatDate(currentPayoffDate);
+                        newPayoffElement.textContent = formatDate(newPayoffDate);
+                        
+                        // Format time saved
+                        const yearsSaved = Math.floor(Math.abs(timeSavedMonths) / 12);
+                        const monthsSaved = Math.abs(timeSavedMonths) % 12;
+                        if (timeSavedMonths > 0) {
+                            timeSavedElement.textContent = `${yearsSaved} years, ${monthsSaved} months shorter`;
+                            timeSavedElement.className = 'positive';
+                        } else if (timeSavedMonths < 0) {
+                            timeSavedElement.textContent = `${yearsSaved} years, ${monthsSaved} months longer`;
+                            timeSavedElement.className = 'negative';
+                        } else {
+                            timeSavedElement.textContent = 'No change';
+                            timeSavedElement.className = '';
+                        }
+                        
+                        // Update interest savings
+                        currentTotalInterestElement.textContent = formatCurrency(currentTotalInterest);
+                        newTotalInterestElement.textContent = formatCurrency(newTotalInterest);
+                        lifetimeInterestSavingsElement.textContent = formatCurrency(lifetimeInterestSavings);
+                        costOfRefinancingElement.textContent = formatCurrency(closingCosts);
+                        netSavingsElement.textContent = formatCurrency(netSavings);
+                        
+                        // Add classes based on values
+                        netSavingsElement.className = netSavings > 0 ? 'highlight positive' : 'highlight negative';
+                        piSavingsElement.className = piSavings > 0 ? 'highlight positive' : 'highlight negative';
+                        totalSavingsElement.className = totalSavings > 0 ? 'highlight positive' : 'highlight negative';
+                        
+                        // Update comparison table
+                        compareCurrentBalanceElement.textContent = formatCurrency(currentBalance);
+                        compareNewBalanceElement.textContent = formatCurrency(newBalance);
+                        compareBalanceDiffElement.textContent = formatCurrency(newBalance - currentBalance);
+                        compareCurrentRateElement.textContent = `${(currentRate * 100).toFixed(3)}%`;
+                        compareNewRateElement.textContent = `${(newRate * 100).toFixed(3)}%`;
+                        compareRateDiffElement.textContent = `${((newRate - currentRate) * 100).toFixed(3)}%`;
+                        compareCurrentPIElement.textContent = formatCurrency(currentMonthlyPI);
+                        compareNewPIElement.textContent = formatCurrency(newMonthlyPI);
+                        comparePIDiffElement.textContent = formatCurrency(newMonthlyPI - currentMonthlyPI);
+                        compareCurrentEscrowElement.textContent = formatCurrency(currentEscrow);
+                        compareNewEscrowElement.textContent = formatCurrency(newEscrow);
+                        compareEscrowDiffElement.textContent = formatCurrency(newEscrow - currentEscrow);
+                        compareCurrentTotalElement.textContent = formatCurrency(currentMonthlyPI + currentEscrow);
+                        compareNewTotalElement.textContent = formatCurrency(newMonthlyPI + newEscrow);
+                        compareTotalDiffElement.textContent = formatCurrency((newMonthlyPI + newEscrow) - (currentMonthlyPI + currentEscrow));
+                        compareCurrentPayoffElement.textContent = formatDate(currentPayoffDate);
+                        compareNewPayoffElement.textContent = formatDate(newPayoffDate);
+                        comparePayoffDiffElement.textContent = formatTimeDifference(timeSavedMonths);
+                        compareCurrentInterestElement.textContent = formatCurrency(currentTotalInterest);
+                        compareNewInterestElement.textContent = formatCurrency(newTotalInterest);
+                        compareInterestDiffElement.textContent = formatCurrency(newTotalInterest - currentTotalInterest);
+                        compareClosingCostsElement.textContent = formatCurrency(closingCosts);
+                        compareClosingDiffElement.textContent = formatCurrency(closingCosts);
+                        
+                        // Apply appropriate classes to comparison differences
+                        applyComparisonClasses([compareBalanceDiffElement, compareRateDiffElement, comparePIDiffElement, 
+                                              compareEscrowDiffElement, compareTotalDiffElement, compareInterestDiffElement]);
+                        
+                        // Update charts
+                        updateBalanceChart(currentAmortization, newAmortization);
+                        updateSavingsChart(currentMonthlyPI, newMonthlyPI, currentEscrow, newEscrow);
+                        updateBreakevenChart(totalSavings, closingCosts, breakevenMonths);
+                        
+                        // Update amortization table
+                        updateAmortizationTable(currentAmortization, newAmortization);
+                        
+                        // Update sensitivity analysis
+                        updateSensitivityAnalysis(currentBalance, currentRate, currentTermRemaining, currentEscrow, 
+                                               newBalance, newRate, newTerm, newEscrow, closingCosts);
+                    } catch (error) {
+                        console.error('Error in calculations:', error);
+                        // Display a more specific error message if available
+                        if (error.message) {
+                            alert('Calculation Error: ' + error.message);
+                        } else {
+                            alert('An error occurred during calculations. Please check your inputs and try again.');
+                        }
+                        
+                        // Clear any partial results to avoid confusion
+                        clearResults();
+                    } finally {
+                        hideLoading();
+                    }
+                }, 100);
+            }
+            
+            // Clear results when an error occurs
+            function clearResults() {
+                // Clear main results
+                document.getElementById('current-pi').textContent = '$0';
+                document.getElementById('new-pi').textContent = '$0';
+                document.getElementById('pi-savings').textContent = '$0';
+                document.getElementById('total-savings').textContent = '$0';
+                document.getElementById('breakeven-months').textContent = '0';
+                document.getElementById('breakeven-date').textContent = 'N/A';
+                document.getElementById('current-payoff').textContent = 'N/A';
+                document.getElementById('new-payoff').textContent = 'N/A';
+                document.getElementById('time-saved').textContent = '0 years, 0 months';
+                document.getElementById('current-total-interest').textContent = '$0';
+                document.getElementById('new-total-interest').textContent = '$0';
+                document.getElementById('lifetime-interest-savings').textContent = '$0';
+                document.getElementById('cost-of-refinancing').textContent = '$0';
+                document.getElementById('net-savings').textContent = '$0';
+                
+                // Clear amortization table
+                document.getElementById('amortization-body').innerHTML = '';
+                
+                // Hide any chart errors and clear charts if they exist
+                document.querySelectorAll('.chart-error').forEach(el => el.style.display = 'none');
+                
+                if (balanceChart) {
+                    try { balanceChart.destroy(); } catch(e) { console.error(e); }
+                    balanceChart = null;
+                }
+                if (savingsChart) {
+                    try { savingsChart.destroy(); } catch(e) { console.error(e); }
+                    savingsChart = null;
+                }
+                if (breakevenChart) {
+                    try { breakevenChart.destroy(); } catch(e) { console.error(e); }
+                    breakevenChart = null;
+                }
+            }
+            
+            function applyComparisonClasses(elements) {
+                elements.forEach(element => {
+                    const value = parseFloat(element.textContent.replace(/[^0-9.-]+/g, ''));
+                    if (value < 0) {
+                        element.className = 'positive';
+                    } else if (value > 0) {
+                        element.className = 'negative';
+                    } else {
+                        element.className = '';
+                    }
+                    
+                    // Special case for rate diff
+                    if (element.id === 'compare-rate-diff' || element.id === 'compare-interest-diff') {
+                        if (value < 0) {
+                            element.className = 'positive';
+                        } else if (value > 0) {
+                            element.className = 'negative';
+                        }
+                    }
+                });
+            }
+            
+            function formatTimeDifference(monthDiff) {
+                if (monthDiff === 0) return 'No change';
+                
+                const years = Math.floor(Math.abs(monthDiff) / 12);
+                const months = Math.abs(monthDiff) % 12;
+                
+                let result = '';
+                if (years > 0) {
+                    result += `${years} year${years > 1 ? 's' : ''}`;
+                }
+                if (months > 0) {
+                    if (result.length > 0) result += ', ';
+                    result += `${months} month${months > 1 ? 's' : ''}`;
+                }
+                
+                if (monthDiff > 0) {
+                    return result + ' shorter';
+                } else {
+                    return result + ' longer';
+                }
+            }
+            
+            function showLoading() {
+                loadingElement.style.display = 'flex';
+            }
+            
+            function hideLoading() {
+                loadingElement.style.display = 'none';
+            }
+            
+            function calculateMonthlyPayment(principal, rate, term) {
+                if (rate <= 0 || term <= 0 || principal <= 0) return 0;
+                
+                const monthlyRate = rate / 12;
+                return principal * (monthlyRate * Math.pow(1 + monthlyRate, term)) / (Math.pow(1 + monthlyRate, term) - 1);
+            }
+            
+            function calculateAmortizationSchedule(principal, rate, term, monthlyPayment, extraPayment) {
+                // Validate inputs to prevent calculation errors
+                if (rate <= 0 || term <= 0 || principal <= 0 || monthlyPayment <= 0) {
+                    console.warn("Invalid inputs for amortization calculation", {
+                        principal, rate, term, monthlyPayment, extraPayment
+                    });
+                    return [];
+                }
+                
+                const monthlyRate = rate / 12;
+                let balance = principal;
+                let month = 0;
+                let schedule = [];
+                
+                while (balance > 0 && month < 1200) {  // Cap at 100 years to prevent infinite loops
+                    month++;
+                    
+                    let interest = balance * monthlyRate;
+                    let principalPayment = monthlyPayment - interest;
+                    
+                    // Add extra payment only if there is one and if the loan isn't already being paid off this month
+                    if (extraPayment > 0) {
+                        // Check if the regular payment would already pay off the loan
+                        if (principalPayment < balance) {
+                            // Only add an extra payment amount that won't exceed the remaining balance
+                            principalPayment += Math.min(extraPayment, balance - principalPayment);
+                        }
+                    }
+                    
+                    // Make sure we don't pay more than the remaining balance
+                    if (principalPayment > balance) {
+                        principalPayment = balance;
+                    }
+                    
+                    // Calculate new balance
+                    balance = Math.max(0, balance - principalPayment);
+                    
+                    // Add to schedule
+                    schedule.push({
+                        month,
+                        interest,
+                        principalPayment,
+                        totalPayment: interest + principalPayment,
+                        balance,
+                        year: Math.ceil(month / 12)
+                    });
+                    
+                    // Break if balance is zero or negative
+                    if (balance <= 0) {
+                        break;
+                    }
+                }
+                
+                return schedule;
+            }
+            
+            // Chart functions
+            function updateBalanceChart(currentAmortization, newAmortization) {
+                if (!window.Chart) return;
+                
+                // Prepare data
+                const labels = [];
+                const currentData = [];
+                const newData = [];
+                
+                // Get data points (one per year)
+                const years = Math.max(
+                    Math.ceil(currentAmortization.length / 12),
+                    Math.ceil(newAmortization.length / 12)
+                );
+                
+                for (let i = 0; i <= years; i++) {
+                    labels.push(`Year ${i}`);
+                    
+                    // Current mortgage data
+                    const currentMonthIndex = i * 12;
+                    if (currentMonthIndex < currentAmortization.length) {
+                        currentData.push(currentAmortization[currentMonthIndex].balance);
+                    } else {
+                        currentData.push(0);
+                    }
+                    
+                    // New mortgage data
+                    const newMonthIndex = i * 12;
+                    if (newMonthIndex < newAmortization.length) {
+                        newData.push(newAmortization[newMonthIndex].balance);
+                    } else {
+                        newData.push(0);
+                    }
+                }
+                
+                // Create or update chart
+                if (balanceChart) {
+                    balanceChart.data.labels = labels;
+                    balanceChart.data.datasets[0].data = currentData;
+                    balanceChart.data.datasets[1].data = newData;
+                    balanceChart.update();
+                } else {
+                    balanceChart = new Chart(balanceChartElement, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Principal & Interest',
+                                    data: [currentMonthlyPI, newMonthlyPI],
+                                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                                    borderColor: 'rgba(41, 128, 185, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Escrow',
+                                    data: [currentEscrow, newEscrow],
+                                    backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                                    borderColor: 'rgba(39, 174, 96, 1)',
+                                    borderWidth: 1
+                                }    label: 'Current Mortgage',
+                                    data: currentData,
+                                    borderColor: '#e74c3c',
+                                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                },
+                                {
+                                    label: 'Refinance',
+                                    data: newData,
+                                    borderColor: '#3498db',
+                                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Loan Balance Over Time'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return formatCurrency(value, 0);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            function updateSavingsChart(currentMonthlyPI, newMonthlyPI, currentEscrow, newEscrow) {
+                if (!window.Chart) return;
+                
+                // Prepare data
+                const currentTotal = currentMonthlyPI + currentEscrow;
+                const newTotal = newMonthlyPI + newEscrow;
+                
+                // Create or update chart
+                if (savingsChart) {
+                    savingsChart.data.datasets[0].data = [currentMonthlyPI, newMonthlyPI];
+                    savingsChart.data.datasets[1].data = [currentEscrow, newEscrow];
+                    savingsChart.update();
+                } else {
+                    savingsChart = new Chart(savingsChartElement, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Current Mortgage', 'Refinance Option'],
+                            datasets: [
+                                {
+                                
